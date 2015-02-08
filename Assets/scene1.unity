@@ -7917,7 +7917,7 @@ MonoBehaviour:
     m_Left: 0
     m_Right: 0
     m_Top: 20
-    m_Bottom: 20
+    m_Bottom: 40
   m_ChildAlignment: 4
   m_StartCorner: 0
   m_StartAxis: 1
@@ -10236,7 +10236,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startingDirection: {x: 0, y: 1, z: 0}
   debugMode: 1
-  debugSpeed: .100000001
+  debugSpeed: .300000012
   executeButton: {fileID: 1510693754}
   startOverButton: {fileID: 1569551843}
   startingPlace: {fileID: 331211959}

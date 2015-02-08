@@ -16,6 +16,8 @@ var startingPlace: Transform;
 
 // Action card panel
 private var actionCardPanel: GameObject;
+// Action card scroll rect
+private var actionCardScrollRect: GameObject;
 // action cards
 var actionCardPrefab: GameObject;
 
@@ -28,6 +30,8 @@ private var actionList: Array;
 private var actionCardList: Array; // TODO: collapse this and the above array into one
 // is the turtle currently executing?
 private var isExecuting: boolean = false;
+// current step of execution we are on
+private var executionStep: int;
 
 
 // initializes variables
@@ -39,6 +43,11 @@ function Start () {
 	if(actionCardPanel == null){
 		Debug.LogError("Could not find ActionCardPanel");
 	}
+	actionCardScrollRect = GameObject.Find("ActionCardScrollRect");
+	if(actionCardScrollRect == null){
+		Debug.LogError("Could not find ActionCardScrollRect");
+	}
+	executionStep = 0;
 }
 
 // creates anonymous method to move forward
@@ -88,6 +97,8 @@ private function turn(degrees: float){
 			if(actionCard != null){
 				actionCard.GetComponent(Button).interactable = false;
 			}
+			scrollOnce();
+			
 		};
 	};
 }
@@ -105,8 +116,28 @@ private function addActionCard(actionName){
 	newCard.transform.SetParent(actionCardPanel.transform, false);
 	(newCard.GetComponentInChildren(UI.Text)as Text).text = actionName;
 	
+	// scroll to bottom of action card panel
+	scrollToBottom();
 	// return reference to card to highlight during execution
 	return newCard;
+}
+
+// scrolls to top of panel
+private function scrollToBottom(){
+	actionCardScrollRect.GetComponent(ScrollRect).verticalNormalizedPosition=0;
+}
+
+// scrolls to bottom of panel
+private function scrollToTop(){
+	actionCardScrollRect.GetComponent(ScrollRect).verticalNormalizedPosition=1;
+}
+
+// scrolls down one step if necessary
+private function scrollOnce(){
+	// if we are at the last step just let it be zero
+	var stepDelta = (executionStep == actionCardList.length)? 1.0 : 1.0 /actionCardList.length;
+	actionCardScrollRect.GetComponent(ScrollRect).verticalNormalizedPosition=1f -(executionStep * stepDelta);
+	Debug.Log(stepDelta * executionStep);
 }
 
 // removes all cards from action card panel
@@ -130,12 +161,15 @@ function execute(){
 // subroutine to execute list (so that we can use WaitForSeconds)
 function executeList(): IEnumerator{
 	isExecuting = true;
+	executionStep = 0;
+	scrollToTop();
 	executeButton.GetComponent(Button).interactable = false;
 	for each(action in actionList){
 		if (debugMode){
-			 yield WaitForSeconds(debugSpeed);
+			 yield WaitForSeconds(debugSpeed);			
 		}
 		(action as function())();
+		executionStep++;
 	}
 	isExecuting = false; // Figure out how to hide and show a butotn
 	startOverButton.GetComponent(Button).interactable = true;
