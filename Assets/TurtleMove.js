@@ -24,6 +24,8 @@ private var localForward: Vector3;
 private var globalForward: Vector3;
 // list of actions for turtle to execute
 private var actionList: Array;
+// list of the action cards
+private var actionCardList: Array; // TODO: collapse this and the above array into one
 // is the turtle currently executing?
 private var isExecuting: boolean = false;
 
@@ -32,6 +34,7 @@ private var isExecuting: boolean = false;
 function Start () {
 	globalForward = localForward = startingDirection;
 	actionList = [];
+	actionCardList = [];
 	actionCardPanel = GameObject.Find("ActionCardPanel");
 	if(actionCardPanel == null){
 		Debug.LogError("Could not find ActionCardPanel");
@@ -40,11 +43,15 @@ function Start () {
 
 // creates anonymous method to move forward
 function addMoveForward(distance: float){
-	addAction( function(){
-		var targetPosition: Vector3 = transform.position + (globalForward * distance);
-		if(checkIfPosEmpty(targetPosition)){
-			transform.Translate (localForward * distance);
-		}
+	addAction( 
+	function(actionCard: GameObject){
+		return function(){
+			var targetPosition: Vector3 = transform.position + (globalForward * distance);
+			if(checkIfPosEmpty(targetPosition)){
+				transform.Translate (localForward * distance);
+			}
+			actionCard.GetComponent(Button).interactable = false;
+		};
 	}, "Forward");
 }
 
@@ -74,16 +81,22 @@ function addTurnRight(){
 
 // creates an anonymous method to turn
 private function turn(degrees: float){
-	return function(){
-		transform.Rotate (Vector3.forward * degrees);
-		globalForward = Quaternion.Euler(0, 0, degrees) * globalForward;
+	return function(actionCard: GameObject){
+		return function(){
+			transform.Rotate (Vector3.forward * degrees);
+			globalForward = Quaternion.Euler(0, 0, degrees) * globalForward;
+			if(actionCard != null){
+				actionCard.GetComponent(Button).interactable = false;
+			}
+		};
 	};
 }
 
 // add action to list of turtle's actions
 private function addAction(fun: Function, actionName){
-	actionList.push(fun);
-	addActionCard(actionName);
+	var actionCard = addActionCard(actionName);
+	actionCardList.push(actionCard);
+	actionList.push(fun(actionCard));
 }
 
 // adds action card to action card panel
@@ -91,13 +104,17 @@ private function addActionCard(actionName){
 	var newCard: GameObject = Instantiate(actionCardPrefab); 
 	newCard.transform.SetParent(actionCardPanel.transform, false);
 	(newCard.GetComponentInChildren(UI.Text)as Text).text = actionName;
+	
+	// return reference to card to highlight during execution
+	return newCard;
 }
 
 // removes all cards from action card panel
 function clearActionCardPanel(){
-	for (var child : Transform in actionCardPanel.transform){
-		Destroy(child.gameObject);
+	for (var actionCard : GameObject in actionCardList){
+		Destroy(actionCard);
 	}
+	actionCardList = [];
 	actionList = [];
 }
 
@@ -126,10 +143,13 @@ function executeList(): IEnumerator{
 
 // returns turtle to the starting position and direction of the level
 function returnToStart(){
+	// makes all buttons unhighlighted
+	for (var actionCard: GameObject in actionCardList){
+		actionCard.GetComponent(Button).interactable = true;	
+	}
 	executeButton.GetComponent(Button).interactable = true;
 	startOverButton.GetComponent(Button).interactable = false;
 	transform.position = startingPlace.transform.position;
-	// transform.rotation = Quaternion.LookRotation(new Vector3(0,1,1));
-	turn(Vector3.Angle(globalForward,startingDirection))();
+	turn(Vector3.Angle(globalForward,startingDirection))(null)(); // pass in null for the "action card" of this action
 	
 }
