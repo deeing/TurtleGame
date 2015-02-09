@@ -5,7 +5,7 @@ import UnityEngine.UI;
 var startingDirection: Vector3 = Vector3.up;
 // whether or not to step throught each action with timer
 var debugMode: boolean = false;
-// how fast each step takes in debug mode
+// how long in seconds each step takes in debug mode
 var debugSpeed: float = 1;
 // execute button so we can disable it
 var executeButton: Transform;
@@ -32,6 +32,8 @@ private var actionCardList: Array; // TODO: collapse this and the above array in
 private var isExecuting: boolean = false;
 // current step of execution we are on
 private var executionStep: int;
+// how often the execution scroll updates
+private var EXECUTION_UPDATE_DELTA = 5;
 
 
 // initializes variables
@@ -60,6 +62,7 @@ function addMoveForward(distance: float){
 				transform.Translate (localForward * distance);
 			}
 			actionCard.GetComponent(Button).interactable = false;
+			scrollOnce(); // Leaving this out on purpose, it gets jarring to rescroll every time
 		};
 	}, "Forward");
 }
@@ -132,11 +135,17 @@ private function scrollToTop(){
 	actionCardScrollRect.GetComponent(ScrollRect).verticalNormalizedPosition=1;
 }
 
+private var counter = 0;
 // scrolls down one step if necessary
 private function scrollOnce(){
-	// if we are at the last step just let it be zero
-	var stepDelta = (executionStep == actionCardList.length)? 1.0 : 1.0 /actionCardList.length;
-	actionCardScrollRect.GetComponent(ScrollRect).verticalNormalizedPosition=1f -(executionStep * stepDelta);
+	if (counter == EXECUTION_UPDATE_DELTA){
+		// if we are at the last step just let it be zero
+		var stepDelta = (executionStep == actionCardList.length)? 1.0 : 1.0 /actionCardList.length;
+		stepDelta = stepDelta * (executionStep + EXECUTION_UPDATE_DELTA);
+		actionCardScrollRect.GetComponent(ScrollRect).verticalNormalizedPosition=1f - stepDelta;
+		counter = 0;
+	}
+	counter ++;
 	Debug.Log(stepDelta * executionStep);
 }
 
@@ -171,7 +180,7 @@ function executeList(): IEnumerator{
 		(action as function())();
 		executionStep++;
 	}
-	isExecuting = false; // Figure out how to hide and show a butotn
+	isExecuting = false;
 	startOverButton.GetComponent(Button).interactable = true;
 }
 
