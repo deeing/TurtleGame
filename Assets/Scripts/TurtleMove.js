@@ -136,6 +136,7 @@ private function removeActionCard(card: GameObject){
 	var index = (card.GetComponentInChildren(ButtonIndex) as ButtonIndex).index;
 	var removedCard = actionCardList[index];
 	actionCardList.RemoveAt(index);
+	actionList.RemoveAt(index);
 	Destroy(removedCard);
 	// decrement index of everything after this entry in the list
 	for (var i = index; i < actionCardList.length; i++){
