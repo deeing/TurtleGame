@@ -118,11 +118,30 @@ private function addActionCard(actionName){
 	var newCard: GameObject = Instantiate(actionCardPrefab); 
 	newCard.transform.SetParent(actionCardPanel.transform, false);
 	(newCard.GetComponentInChildren(UI.Text)as Text).text = actionName;
+	(newCard.GetComponentInChildren(ButtonIndex) as ButtonIndex).index = actionCardList.length;
+	(newCard.GetComponentInChildren(Button) as Button).onClick.AddListener(
+		function(){
+			removeActionCard(newCard);
+		}	
+	);
 	
 	// scroll to bottom of action card panel
 	scrollToBottom();
 	// return reference to card to highlight during execution
 	return newCard;
+}
+
+// removes an action card from the list
+private function removeActionCard(card: GameObject){
+	var index = (card.GetComponentInChildren(ButtonIndex) as ButtonIndex).index;
+	var removedCard = actionCardList[index];
+	actionCardList.RemoveAt(index);
+	Destroy(removedCard);
+	// decrement index of everything after this entry in the list
+	for (var i = index; i < actionCardList.length; i++){
+		var currentCard: GameObject = actionCardList[i];
+		(currentCard.GetComponentInChildren(ButtonIndex) as ButtonIndex).index--;
+	}
 }
 
 // scrolls to top of panel
@@ -158,13 +177,11 @@ function clearActionCardPanel(){
 	actionList = [];
 }
 
-// calls execute and clears action list
+// calls execute
 function execute(){
 	if(!isExecuting){
 		// execute the lists of tasks
 		StartCoroutine("executeList");
-		// clear list of actions
-		//actionList = [];
 	}
 }
 // subroutine to execute list (so that we can use WaitForSeconds)
