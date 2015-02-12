@@ -73,7 +73,7 @@ function checkIfPosEmpty(targetPos: Vector3) {
 	for each(var current in allObstacles) 
 	{ 
 		if(current.transform.position == targetPos){
-			Debug.Log(current.transform.position);
+			//Debug.Log(current.transform.position);
 			// TODO: broadcast collide message
 			return false; 
 		}
